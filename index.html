@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wasatch Barber Co.</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Cuts, fades, shaves and beard work. Book your chair online.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+section{padding-block:72px}
+section[id]{scroll-margin-top:84px}
+
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--bg);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:14px}
+.logo{font-family:var(--display);font-weight:900;font-size:1.5rem;text-transform:uppercase;text-decoration:none;letter-spacing:.02em;min-width:0}
+.logo span{color:var(--red)}
+.nav ul{display:flex;gap:24px;list-style:none;margin:0;padding:0;font-weight:500}
+.nav ul a{text-decoration:none}
+.nav ul a:hover{color:var(--red)}
+@media (max-width:720px){.nav ul{display:none}}
+
+.hero{padding-block:64px 56px}
+.hero-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:48px;align-items:end}
+.hero h1{font-size:clamp(3.4rem,10vw,7.5rem);font-weight:900}
+.hero h1 em{font-style:normal;color:var(--red)}
+.hero p{max-width:46ch;color:var(--muted);font-size:1.1rem;margin:20px 0 28px}
+.hero .actions{display:flex;flex-wrap:wrap;gap:12px}
+.ticket{background:var(--surface);border:1px solid var(--line);padding:24px;font-family:var(--mono);font-size:.85rem}
+.ticket h3{font-size:1.6rem;margin-bottom:12px}
+.ticket dl{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0}
+.ticket dt{color:var(--muted)} .ticket dd{margin:0;text-align:right}
+.ticket .open{color:var(--navy);font-weight:500}
+@media (max-width:820px){.hero-grid{grid-template-columns:1fr}}
+
+.menu{display:grid;grid-template-columns:1fr 1fr;gap:8px 64px;margin-top:36px}
+.item{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding-block:16px;border-bottom:1px dashed var(--line)}
+.item b{font-family:var(--display);font-size:1.5rem;text-transform:uppercase;font-weight:800}
+.item .price{font-family:var(--display);font-size:1.5rem;font-weight:800;color:var(--red);font-variant-numeric:tabular-nums}
+.item small{color:var(--muted);grid-column:1/-1}
+.item .dur{font-family:var(--mono);font-size:.75rem;color:var(--navy)}
+@media (max-width:720px){.menu{grid-template-columns:1fr}}
+
+.dark-band{background:var(--ink);color:var(--bg)}
+.dark-band .eyebrow{color:var(--brass)}
+.barbers{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:36px}
+.barber{display:grid;gap:10px;align-content:start}
+.portrait{aspect-ratio:4/5;max-width:100%;display:grid;place-items:center;background:repeating-linear-gradient(90deg,transparent 0 22px,rgba(127,127,127,.12) 22px 23px),var(--navy);color:var(--bg);font-family:var(--display);font-size:4rem;font-weight:900}
+.barber:nth-child(3n+2) .portrait{background-color:var(--red)}
+.barber:nth-child(3n) .portrait{background-color:var(--brass)}
+.barber h3{font-size:1.7rem}
+.barber p{margin:0;opacity:.75;font-size:.95rem}
+@media (max-width:720px){.barbers{grid-template-columns:1fr}.portrait{aspect-ratio:16/9}}
+
+.book{display:grid;grid-template-columns:1fr 340px;gap:32px;margin-top:36px;align-items:start}
+@media (max-width:900px){.book{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);padding:28px;display:grid;grid-template-columns:minmax(0,1fr);gap:32px;min-width:0}
+.step{min-width:0}
+.step h3{font-size:1.4rem;display:flex;gap:12px;align-items:baseline;margin-bottom:14px}
+.step h3 i{font-style:normal;font-family:var(--mono);font-size:.8rem;color:var(--red)}
+.days{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.day{flex:0 0 auto;width:64px;text-align:center;padding:10px 0;display:grid;gap:2px}
+.day span{font-family:var(--mono);font-size:.7rem;text-transform:uppercase}
+.day strong{font-family:var(--display);font-size:1.6rem;font-weight:800;line-height:1}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;margin-top:14px}
+.slots .chip{font-family:var(--mono);font-size:.85rem;text-align:center}
+.slots .msg{grid-column:1/-1;margin:0;color:var(--muted)}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fields .full{grid-column:1/-1}
+@media (max-width:560px){.fields{grid-template-columns:1fr}}
+
+.summary{position:sticky;top:90px;background:var(--surface);border:1px solid var(--line);border-top:6px solid var(--red);padding:24px;display:grid;gap:16px}
+.summary h3{font-size:1.6rem}
+.summary dl{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:0;font-size:.95rem}
+.summary dt{color:var(--muted)} .summary dd{margin:0;text-align:right;font-weight:600}
+.summary .total{border-top:1px dashed var(--line);padding-top:12px;font-family:var(--display);font-size:1.6rem;text-transform:uppercase;display:flex;justify-content:space-between}
+.summary .note{font-size:.8rem;color:var(--muted);margin:0}
+
+.confirm{border:2px solid var(--navy);padding:24px;display:grid;gap:10px}
+.confirm h3{font-size:2rem;color:var(--navy)}
+.confirm p{margin:0}
+.confirm code{font-family:var(--mono);background:var(--chip);padding:2px 8px}
+
+.visit{display:grid;grid-template-columns:1fr 1fr 1fr;gap:40px;margin-top:36px}
+.visit h3{font-size:1.4rem;margin-bottom:10px}
+.visit p{margin:0 0 8px}
+.hours{display:grid;grid-template-columns:auto 1fr;gap:4px 20px;font-variant-numeric:tabular-nums;margin:0}
+.hours dd{margin:0;text-align:right}
+.hours .today{color:var(--red);font-weight:600}
+@media (max-width:820px){.visit{grid-template-columns:1fr}}
+footer{border-top:1px solid var(--line);padding-block:28px;color:var(--muted);font-size:.85rem}
+.foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+.load-err{background:var(--surface);border:2px solid var(--red);padding:16px;margin-top:24px}
+</style>
+</head>
+<body>
+
+<div class="demo-bar" id="demoBar" hidden>
+  <div class="wrap"><b>Demo mode</b><span>Bookings are saved only in this browser. Connect your Google Apps Script to go live.</span></div>
+</div>
+<div class="pole" aria-hidden="true"></div>
+<header>
+  <nav class="wrap nav">
+    <a class="logo" href="#top" id="logo">Wasatch <span>Barber</span> Co.</a>
+    <ul>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#barbers">Barbers</a></li>
+      <li><a href="#visit">Visit</a></li>
+    </ul>
+    <a class="btn" href="#book">Book a chair</a>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <div class="eyebrow">Walk-ins welcome · Book online anytime</div>
+        <h1>Sharp cuts.<br><em>Good vibes.</em><br>No rush.</h1>
+        <p id="about">Classic and modern cuts, straight-razor shaves and beard work from barbers who take their time. Book online in under a minute.</p>
+        <div class="actions">
+          <a class="btn" href="#book">Book online</a>
+          <a class="btn ghost" href="#services">See prices</a>
+        </div>
+        <div class="load-err" id="loadErr" hidden></div>
+      </div>
+      <aside class="ticket" aria-label="Today at the shop">
+        <h3>Today at the shop</h3>
+        <dl>
+          <dt>Status</dt><dd class="open" id="status">…</dd>
+          <dt>Hours</dt><dd id="todayHours">…</dd>
+          <dt>Barbers</dt><dd id="barberCount">…</dd>
+          <dt>Next opening</dt><dd id="nextOpen">…</dd>
+        </dl>
+      </aside>
+    </div>
+  </section>
+
+  <section id="services" style="background:var(--surface)">
+    <div class="wrap">
+      <div class="eyebrow">Services</div>
+      <h2>The menu</h2>
+      <div class="menu" id="menu"></div>
+    </div>
+  </section>
+
+  <section id="barbers" class="dark-band">
+    <div class="wrap">
+      <div class="eyebrow">The chairs</div>
+      <h2>Your barbers</h2>
+      <div class="barbers" id="barberList"></div>
+    </div>
+  </section>
+
+  <section id="book">
+    <div class="wrap">
+      <div class="eyebrow">Online booking</div>
+      <h2>Book your chair</h2>
+      <div class="book">
+        <form class="panel" id="bookForm" novalidate>
+          <div class="step">
+            <h3><i>Step 1</i> Pick a service</h3>
+            <div class="chips" id="svcChips"></div>
+          </div>
+          <div class="step">
+            <h3><i>Step 2</i> Choose a barber</h3>
+            <div class="chips" id="barberChips"></div>
+          </div>
+          <div class="step">
+            <h3><i>Step 3</i> Date &amp; time</h3>
+            <div class="days" id="days"></div>
+            <div class="slots" id="slots" aria-live="polite"></div>
+          </div>
+          <div class="step">
+            <h3><i>Step 4</i> Your details</h3>
+            <div class="fields">
+              <label class="field" for="name">Name<input id="name" autocomplete="name" placeholder="Jordan Smith"></label>
+              <label class="field" for="phone">Phone<input id="phone" type="tel" autocomplete="tel" placeholder="(801) 555-0142"></label>
+              <label class="field full" for="email">Email <span class="hint">for your confirmation (optional)</span><input id="email" type="email" autocomplete="email" placeholder="you@example.com"></label>
+              <label class="field full" for="notes">Notes for your barber <span class="hint">(optional)</span><textarea id="notes" rows="2" placeholder="Low fade, keep length on top"></textarea></label>
+            </div>
+          </div>
+          <p class="err" id="err" role="alert"></p>
+          <div id="confirmBox" class="confirm" hidden></div>
+        </form>
+
+        <aside class="summary" aria-live="polite">
+          <h3>Your booking</h3>
+          <dl>
+            <dt>Service</dt><dd id="sSvc">—</dd>
+            <dt>Barber</dt><dd id="sBarber">—</dd>
+            <dt>Date</dt><dd id="sDate">—</dd>
+            <dt>Time</dt><dd id="sTime">—</dd>
+            <dt>Length</dt><dd id="sDur">—</dd>
+          </dl>
+          <div class="total"><span>Total</span><span id="sTotal">$0</span></div>
+          <button class="btn" type="submit" form="bookForm" id="submitBtn" disabled>Confirm booking</button>
+          <p class="note">Pay at the shop. Need to cancel? Call us and we'll sort it out.</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section id="visit" style="background:var(--surface)">
+    <div class="wrap">
+      <div class="eyebrow">Visit</div>
+      <h2>Find the shop</h2>
+      <div class="visit">
+        <div>
+          <h3>Address</h3>
+          <p id="addr">—</p>
+        </div>
+        <div>
+          <h3>Hours</h3>
+          <dl class="hours" id="hoursList"></dl>
+        </div>
+        <div>
+          <h3>Contact</h3>
+          <p id="contact">—</p>
+          <p class="hint">Questions about a booking? Call the shop during open hours.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span id="copy">© Wasatch Barber Co.</span>
+    <a href="admin.html">Owner login</a>
+  </div>
+</footer>
+<div class="pole" aria-hidden="true"></div>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script>
+(function () {
+  const U = BookingUtil, $ = id => document.getElementById(id);
+  let CFG = null;
+  const state = { svc: null, barber: 'any', date: null, time: null, slots: [], loading: false };
+  let slotReq = 0;
+
+  if (!BookingAPI.live) $('demoBar').hidden = false;
+  init();
+
+  async function init() {
+    try {
+      CFG = await BookingAPI.call('getConfig');
+    } catch (e) {
+      $('loadErr').hidden = false;
+      $('loadErr').textContent = 'Online booking is unavailable right now. ' + e.message;
+      return;
+    }
+    renderShop(); renderMenu(); renderBarbers(); renderHours(); renderToday();
+    state.svc = CFG.services[0] ? CFG.services[0].id : null;
+    renderPickers();
+    pickFirstDay();
+  }
+
+  /* ---------- Shop info ---------- */
+  function renderShop() {
+    const s = CFG.shop, words = s.name.split(' ');
+    $('logo').innerHTML = words.length >= 3
+      ? U.esc(words[0]) + ' <span>' + U.esc(words[1]) + '</span> ' + U.esc(words.slice(2).join(' '))
+      : U.esc(s.name);
+    document.title = s.name;
+    if (s.about) $('about').textContent = s.about;
+    $('addr').innerHTML = U.esc(s.address) + '<br>' + U.esc(s.city);
+    $('contact').innerHTML = U.esc(s.phone) + '<br>' + U.esc(s.email);
+    $('copy').textContent = '© ' + new Date().getFullYear() + ' ' + s.name;
+  }
+  function renderMenu() {
+    $('menu').innerHTML = CFG.services.map(s => `<div class="item"><b>${U.esc(s.name)}</b><span class="price">$${U.esc(s.price)}</span><small>${U.esc(s.desc)} <span class="dur">· ${s.dur} min</span></small></div>`).join('')
+      || '<p class="hint">Services coming soon.</p>';
+  }
+  function renderBarbers() {
+    $('barberList').innerHTML = CFG.barbers.map(b => `<div class="barber"><div class="portrait" aria-hidden="true">${U.esc(b.init)}</div><h3>${U.esc(b.name)}</h3><p>${U.esc(b.bio)}</p></div>`).join('');
+  }
+  const hoursText = h => h ? U.fmtTime(h[0]) + ' – ' + U.fmtTime(h[1]) : 'Closed';
+  function renderHours() {
+    const today = new Date().getDay();
+    $('hoursList').innerHTML = [1, 2, 3, 4, 5, 6, 0].map(d => {
+      const cls = d === today ? ' class="today"' : '';
+      return `<dt${cls}>${U.DAYNAMES[d]}</dt><dd${cls}>${hoursText(CFG.hours[d])}</dd>`;
+    }).join('');
+  }
+  function renderToday() {
+    const now = new Date(), d = now.getDay(), h = CFG.hours[d], todayYmd = U.ymd(now);
+    const closedToday = !h || U.closedOn(CFG.closures, todayYmd, '');
+    const mins = now.getHours() * 60 + now.getMinutes();
+    $('todayHours').textContent = closedToday ? 'Closed today' : hoursText(h);
+    const openNow = !closedToday && mins >= h[0] && mins < h[1];
+    $('status').textContent = openNow ? 'Open now' : 'Closed now';
+    $('barberCount').textContent = CFG.barbers.filter(b => !(b.daysOff || []).includes(d) && !U.closedOn(CFG.closures, todayYmd, b.id)).length + ' in today';
+    const next = bookableDays()[0];
+    $('nextOpen').textContent = next ? (next === todayYmd ? 'Today' : U.fmtDate(next)) : '—';
+  }
+
+  /* ---------- Booking ---------- */
+  function barberWorks(b, date) {
+    const wd = U.parseYmd(date).getDay();
+    return !(b.daysOff || []).includes(wd) && !U.closedOn(CFG.closures, date, b.id);
+  }
+  function bookableDays() {
+    const out = [];
+    for (let i = 0; i <= CFG.windowDays; i++) {
+      const date = U.addDays(CFG.today, i), wd = U.parseYmd(date).getDay();
+      if (!CFG.hours[wd] || U.closedOn(CFG.closures, date, '')) continue;
+      const crew = state.barber === 'any' ? CFG.barbers : CFG.barbers.filter(b => b.id === state.barber);
+      if (crew.some(b => barberWorks(b, date))) out.push(date);
+    }
+    return out;
+  }
+
+  function chipGroup(el, items, key, onPick) {
+    el.innerHTML = items.map(i => `<button type="button" class="chip" data-v="${U.esc(i.id)}" aria-pressed="${state[key] === i.id}">${U.esc(i.label)}</button>`).join('');
+    el.onclick = e => {
+      const b = e.target.closest('.chip');
+      if (!b || b.disabled || state[key] === b.dataset.v) return;
+      state[key] = b.dataset.v; onPick();
+    };
+  }
+
+  function renderPickers() {
+    chipGroup($('svcChips'), CFG.services.map(s => ({ id: s.id, label: `${s.name} · $${s.price}` })), 'svc', () => { renderPickers(); loadSlots(); });
+    chipGroup($('barberChips'), [{ id: 'any', label: 'First available' }, ...CFG.barbers.map(b => ({ id: b.id, label: b.name }))], 'barber', () => {
+      renderPickers();
+      if (!bookableDays().includes(state.date)) pickFirstDay(); else loadSlots();
+    });
+    const days = bookableDays();
+    $('days').innerHTML = days.map(date => {
+      const d = U.parseYmd(date);
+      return `<button type="button" class="chip day" data-v="${date}" aria-pressed="${state.date === date}"><span>${date === CFG.today ? 'Today' : U.DAYNAMES[d.getDay()].slice(0, 3)}</span><strong>${d.getDate()}</strong><span>${d.toLocaleString('en-US', { month: 'short' })}</span></button>`;
+    }).join('') || '<p class="hint">No open days in the booking window. Call the shop.</p>';
+    $('days').onclick = e => {
+      const b = e.target.closest('.chip');
+      if (!b || state.date === b.dataset.v) return;
+      state.date = b.dataset.v; renderPickers(); loadSlots();
+    };
+    renderSummary();
+  }
+
+  function pickFirstDay() {
+    state.date = bookableDays()[0] || null;
+    renderPickers(); loadSlots();
+  }
+
+  async function loadSlots() {
+    state.time = null; renderSummary();
+    if (!state.date || !state.svc) { $('slots').innerHTML = ''; return; }
+    const id = ++slotReq;
+    $('slots').innerHTML = '<p class="msg"><span class="spinner"></span> Checking open times…</p>';
+    try {
+      const res = await BookingAPI.call('getSlots', { date: state.date, serviceId: state.svc, barberId: state.barber });
+      if (id !== slotReq) return;
+      state.slots = res.slots;
+      renderSlots();
+    } catch (e) {
+      if (id !== slotReq) return;
+      $('slots').innerHTML = `<p class="msg">${U.esc(e.message)}</p>`;
+    }
+  }
+  function renderSlots() {
+    $('slots').innerHTML = state.slots.map(s => `<button type="button" class="chip" data-v="${s.time}" aria-pressed="${state.time === s.time}">${U.fmtTime(s.time)}</button>`).join('')
+      || '<p class="msg">No open times this day. Pick another date or barber.</p>';
+    $('slots').onclick = e => {
+      const b = e.target.closest('.chip'); if (!b) return;
+      state.time = Number(b.dataset.v); renderSlots(); renderSummary();
+    };
+  }
+
+  function renderSummary() {
+    const svc = CFG.services.find(s => s.id === state.svc);
+    $('sSvc').textContent = svc ? svc.name : '—';
+    $('sBarber').textContent = state.barber === 'any' ? 'First available' : CFG.barbers.find(b => b.id === state.barber).name;
+    $('sDate').textContent = state.date ? U.fmtDate(state.date) : '—';
+    $('sTime').textContent = state.time != null ? U.fmtTime(state.time) : '—';
+    $('sDur').textContent = svc ? svc.dur + ' min' : '—';
+    $('sTotal').textContent = svc ? '$' + svc.price : '$0';
+    $('submitBtn').disabled = state.time == null || state.loading;
+  }
+
+  $('bookForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const name = $('name').value.trim(), phone = $('phone').value.trim(), email = $('email').value.trim();
+    const err = $('err');
+    if (state.time == null) { err.textContent = 'Pick a time to continue.'; return; }
+    if (!name) { err.textContent = 'Enter your name so your barber knows who to expect.'; $('name').focus(); return; }
+    if (phone.replace(/\D/g, '').length < 10) { err.textContent = 'Enter a 10-digit phone number.'; $('phone').focus(); return; }
+    if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { err.textContent = 'Check your email address.'; $('email').focus(); return; }
+    err.textContent = '';
+    state.loading = true;
+    const btn = $('submitBtn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Booking…';
+    try {
+      const r = await BookingAPI.call('book', { date: state.date, time: state.time, serviceId: state.svc, barberId: state.barber, name, phone, email, notes: $('notes').value.trim() });
+      const box = $('confirmBox');
+      box.hidden = false;
+      box.innerHTML = `<h3>You're booked, ${U.esc(name.split(' ')[0])}</h3>
+        <p>${U.esc(r.service)} with ${U.esc(r.barberName)} on ${U.fmtDate(r.date, { weekday: 'long', month: 'long', day: 'numeric' })} at ${U.fmtTime(r.time)}.</p>
+        <p>Confirmation code <code>${U.esc(r.code)}</code>${email ? '. We emailed you a copy.' : '. Show it at the front desk.'}</p>`;
+      box.scrollIntoView({ block: 'center' });
+      ['notes'].forEach(id => $(id).value = '');
+    } catch (ex) {
+      err.textContent = ex.message;
+    } finally {
+      state.loading = false;
+      btn.textContent = 'Confirm booking';
+      loadSlots();
+    }
+  });
+})();
+</script>
+</body>
+</html>

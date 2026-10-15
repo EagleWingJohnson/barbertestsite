@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shop Admin</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+/* Layout: slim top bar, tab strip, one working panel per tab, sticky save bar at the bottom */
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--ink);color:var(--bg)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:12px}
+.top .logo{font-family:var(--display);font-weight:900;font-size:1.3rem;text-transform:uppercase;letter-spacing:.02em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top .logo small{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;color:var(--brass);margin-left:8px}
+.top nav{display:flex;gap:16px;align-items:center;font-size:.9rem;flex-shrink:0}
+.top nav a,.top nav button{color:var(--bg);background:none;border:0;font:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:0}
+
+main{padding-block:28px 120px}
+
+.login{max-width:420px;margin:48px auto 0;background:var(--surface);border:1px solid var(--line);border-top:6px solid var(--red);padding:28px;display:grid;gap:16px}
+.login h1{font-size:2.4rem}
+
+.tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:2px solid var(--ink);margin-bottom:24px}
+.tab{flex:0 0 auto;border:0;background:none;color:var(--muted);font:600 .95rem var(--body);padding:12px 16px;cursor:pointer;border-bottom:4px solid transparent;margin-bottom:-2px}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--red)}
+.tab .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--red);margin-left:6px;vertical-align:2px}
+
+.pane-head{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px 24px;margin-bottom:20px}
+.pane-head h2{font-size:clamp(2rem,4vw,2.6rem)}
+.pane-head p{margin:6px 0 0;color:var(--muted);max-width:62ch}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.toolbar label.field{width:auto}
+.toolbar input,.toolbar select{width:auto}
+
+.card{background:var(--surface);border:1px solid var(--line);padding:20px}
+.stack{display:grid;gap:12px}
+
+/* bookings */
+.stats{display:flex;flex-wrap:wrap;gap:8px 28px;font-family:var(--mono);font-size:.8rem;color:var(--muted);margin-bottom:16px}
+.stats b{color:var(--ink);font-size:1rem;font-variant-numeric:tabular-nums}
+.dayhead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:18px 0 8px;border-bottom:1px solid var(--ink)}
+.dayhead h3{font-size:1.5rem}
+.dayhead span{font-family:var(--mono);font-size:.75rem;color:var(--muted)}
+.bk{display:grid;grid-template-columns:110px minmax(0,1fr) auto;gap:6px 20px;padding:14px 0;border-bottom:1px dashed var(--line);align-items:start}
+.bk .when{font-family:var(--mono);font-size:.9rem;font-variant-numeric:tabular-nums}
+.bk .when small{display:block;color:var(--muted);font-size:.75rem}
+.bk .who{min-width:0}
+.bk .who b{font-size:1.02rem}
+.bk .who .meta{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.88rem;color:var(--muted)}
+.bk .who .meta span{user-select:all}
+.bk .notes{font-size:.88rem;margin-top:4px;padding-left:10px;border-left:3px solid var(--brass)}
+.pill{display:inline-block;font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;background:var(--chip);border-radius:2px;margin-left:6px;vertical-align:2px}
+.bk .acts{display:flex;gap:8px}
+.cancel-box{grid-column:1/-1;background:var(--bg);border:1px solid var(--red);padding:14px;display:grid;gap:10px}
+.cancel-box .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.check{display:flex;gap:8px;align-items:center;font-size:.9rem;font-weight:500}
+.empty{padding:40px 20px;text-align:center;color:var(--muted);border:1px dashed var(--line)}
+@media (max-width:640px){.bk{grid-template-columns:1fr}.bk .acts{justify-content:flex-start}}
+
+/* services */
+.svc-row{display:grid;grid-template-columns:minmax(0,1.3fr) 100px 120px minmax(0,2fr) auto auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--line)}
+.svc-head{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--ink)}
+.svc-row.off input:not([type=checkbox]),.svc-row.off select{opacity:.55}
+.money{position:relative}
+.money::before{content:"$";position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.money input{padding-left:22px}
+@media (max-width:860px){
+  .svc-head{display:none}
+  .svc-row{grid-template-columns:1fr 1fr;padding:16px 0}
+  .svc-row>:first-child,.svc-row .desc{grid-column:1/-1}
+}
+
+/* barbers */
+.barber-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.barber-card{display:grid;gap:12px;align-content:start}
+.barber-card .row2{display:grid;grid-template-columns:1fr 80px;gap:10px}
+.daysoff{display:flex;flex-wrap:wrap;gap:6px}
+.daysoff label{display:flex;align-items:center;gap:4px;font-size:.85rem;padding:6px 8px;background:var(--chip);border-radius:2px;cursor:pointer}
+.card-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px dashed var(--line);padding-top:12px}
+@media (max-width:400px){.barber-grid{grid-template-columns:1fr}}
+
+/* hours */
+.hrs{display:grid;grid-template-columns:130px 110px minmax(0,1fr) minmax(0,1fr);gap:10px 14px;align-items:center}
+.hrs .dn{font-weight:600}
+.hrs .closed{color:var(--muted);grid-column:3/-1;font-size:.9rem}
+.hrs-head{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:24px}
+@media (max-width:560px){.hrs{grid-template-columns:1fr 1fr}.hrs-head{display:none}.hrs .dn{grid-column:1/-1;margin-top:8px}.hrs .closed{grid-column:1/-1}}
+
+/* days off */
+.add-off{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:12px;align-items:end}
+@media (max-width:860px){.add-off{grid-template-columns:1fr 1fr}.add-off .btn{grid-column:1/-1}}
+.off-row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1.4fr) auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px dashed var(--line)}
+.off-row .dates{font-weight:600}
+.off-row.past{opacity:.5}
+@media (max-width:640px){.off-row{grid-template-columns:1fr auto}.off-row .dates{grid-column:1/-1}}
+
+/* shop info */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.two .full{grid-column:1/-1}
+@media (max-width:640px){.two{grid-template-columns:1fr}}
+.sec-title{font-size:1.4rem;margin:8px 0 12px}
+
+.savebar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--ink);color:var(--bg);padding-bottom:env(safe-area-inset-bottom,0px)}
+.savebar .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;padding-block:12px}
+.savebar .err{color:var(--bg);font-weight:600}
+.idle-warn{position:fixed;left:0;right:0;top:0;z-index:40;background:var(--red);color:var(--on-accent);padding-top:env(safe-area-inset-top,0px)}
+.idle-warn .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;padding-block:12px;font-weight:600}
+.idle-warn .btn{background:var(--on-accent);color:var(--red)}
+.savebar .btn.quiet{background:transparent;color:var(--bg);box-shadow:inset 0 0 0 1px var(--bg)}
+</style>
+</head>
+<body>
+
+<div class="demo-bar" id="demoBar" hidden>
+  <div class="wrap"><b>Demo mode</b><span>Changes are saved only in this browser. The password is <code>demodemo</code>.</span></div>
+</div>
+<header>
+  <div class="wrap top">
+    <div class="logo" id="shopName">Shop admin</div>
+    <nav>
+      <a href="./">View site</a>
+      <button type="button" id="signOut" hidden>Sign out</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <form class="login" id="loginForm" novalidate>
+    <div class="eyebrow">Owner access</div>
+    <h1>Sign in</h1>
+    <label class="field" for="pw">Admin password<input id="pw" type="password" autocomplete="current-password"></label>
+    <p class="err" id="loginErr" role="alert"></p>
+    <button class="btn" id="loginBtn">Sign in</button>
+  </form>
+
+  <div id="app" hidden>
+    <div class="tabs" role="tablist" id="tabs">
+      <button class="tab" role="tab" data-tab="bookings" aria-selected="true">Bookings</button>
+      <button class="tab" role="tab" data-tab="services">Services &amp; prices</button>
+      <button class="tab" role="tab" data-tab="barbers">Barbers</button>
+      <button class="tab" role="tab" data-tab="hours">Hours</button>
+      <button class="tab" role="tab" data-tab="closures">Days off</button>
+      <button class="tab" role="tab" data-tab="shop">Shop info</button>
+      <button class="tab" role="tab" data-tab="account">Account</button>
+    </div>
+
+    <!-- BOOKINGS -->
+    <section data-pane="bookings">
+      <div class="pane-head">
+        <div>
+          <h2>Bookings</h2>
+          <p>Every online booking, read straight from your Google Calendar. If you drag an appointment to a new time in Calendar, it moves here too.</p>
+        </div>
+        <div class="toolbar">
+          <label class="field" for="bFrom">From<input type="date" id="bFrom"></label>
+          <label class="field" for="bTo">To<input type="date" id="bTo"></label>
+          <label class="field" for="bBarber">Barber<select id="bBarber"></select></label>
+          <button class="btn small quiet" type="button" id="bRefresh">Refresh</button>
+        </div>
+      </div>
+      <div class="stats" id="bStats"></div>
+      <div id="bList"></div>
+    </section>
+
+    <!-- SERVICES -->
+    <section data-pane="services" hidden>
+      <div class="pane-head">
+        <div>
+          <h2>Services &amp; prices</h2>
+          <p>What customers can book. Turning a service off hides it from the website but keeps existing bookings.</p>
+        </div>
+        <button class="btn small" type="button" id="addSvc">Add service</button>
+      </div>
+      <div class="card">
+        <div class="svc-row svc-head"><span>Name</span><span>Price</span><span>Length</span><span>Description</span><span>Bookable</span><span></span></div>
+        <div id="svcList"></div>
+      </div>
+    </section>
+
+    <!-- BARBERS -->
+    <section data-pane="barbers" hidden>
+      <div class="pane-head">
+        <div>
+          <h2>Barbers</h2>
+          <p>Each barber's bookings go onto the Google Calendar you pick. Anything else on that calendar, like a lunch break or a personal appointment, blocks their time automatically.</p>
+        </div>
+        <button class="btn small" type="button" id="addBarber">Add barber</button>
+      </div>
+      <div class="barber-grid" id="barberGrid"></div>
+    </section>
+
+    <!-- HOURS -->
+    <section data-pane="hours" hidden>
+      <div class="pane-head">
+        <div>
+          <h2>Hours</h2>
+          <p id="tzNote">Regular weekly hours. For holidays or vacations, use Days off.</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="hrs" id="hrsGrid"></div>
+      </div>
+      <h3 class="sec-title" style="margin-top:28px">Booking rules</h3>
+      <div class="card rules">
+        <label class="field" for="slotStep">Start times every
+          <select id="slotStep"><option value="15">15 minutes</option><option value="20">20 minutes</option><option value="30">30 minutes</option><option value="45">45 minutes</option><option value="60">60 minutes</option></select>
+        </label>
+        <label class="field" for="windowDays">Customers can book up to
+          <select id="windowDays"><option value="7">1 week ahead</option><option value="14">2 weeks ahead</option><option value="21">3 weeks ahead</option><option value="30">30 days ahead</option><option value="60">60 days ahead</option><option value="90">90 days ahead</option></select>
+        </label>
+        <label class="field" for="minNotice">Minimum notice
+          <select id="minNotice"><option value="0">None</option><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">1 hour</option><option value="120">2 hours</option><option value="240">4 hours</option><option value="1440">1 day</option></select>
+        </label>
+      </div>
+    </section>
+
+    <!-- DAYS OFF -->
+    <section data-pane="closures" hidden>
+      <div class="pane-head">
+        <div>
+          <h2>Days off</h2>
+          <p>Close the whole shop for a holiday, or block a single barber for vacation. Customers won't see those dates. Existing bookings on those days stay put, so cancel them from Bookings if needed.</p>
+        </div>
+      </div>
+      <div class="card add-off">
+        <label class="field" for="offStart">First day<input type="date" id="offStart"></label>
+        <label class="field" for="offEnd">Last day<input type="date" id="offEnd"></label>
+        <label class="field" for="offWho">Who's off<select id="offWho"></select></label>
+        <label class="field" for="offNote">Note <span class="hint">(only you see this)</span><input id="offNote" placeholder="Thanksgiving"></label>
+        <button class="btn small" type="button" id="addOff">Add</button>
+      </div>
+      <p class="err" id="offErr"></p>
+      <div id="offList"></div>
+    </section>
+
+    <!-- SHOP INFO -->
+    <section data-pane="shop" hidden>
+      <div class="pane-head">
+        <div>
+          <h2>Shop info</h2>
+          <p>Shown on the website and in confirmation emails.</p>
+        </div>
+      </div>
+      <div class="card two">
+        <label class="field" for="shName">Shop name<input id="shName" data-shop="name"></label>
+        <label class="field" for="shPhone">Phone<input id="shPhone" data-shop="phone" type="tel"></label>
+        <label class="field" for="shAddr">Street address<input id="shAddr" data-shop="address"></label>
+        <label class="field" for="shCity">City, state, ZIP<input id="shCity" data-shop="city"></label>
+        <label class="field full" for="shEmail">Shop email <span class="hint">customers' replies to confirmations go here</span><input id="shEmail" data-shop="email" type="email"></label>
+        <label class="field full" for="shAbout">Intro text on the home page<textarea id="shAbout" data-shop="about" rows="3"></textarea></label>
+      </div>
+
+      <h3 class="sec-title" style="margin-top:28px">Booking alerts</h3>
+      <div class="card stack">
+        <label class="check" for="shNotify"><input type="checkbox" id="shNotify"> Email me every time someone books</label>
+        <label class="field" for="shOwnerEmail">Send alerts to<input id="shOwnerEmail" data-shop="ownerEmail" type="email" placeholder="Your Google account email"></label>
+      </div>
+    </section>
+
+    <!-- ACCOUNT -->
+    <section data-pane="account" hidden>
+      <div class="pane-head">
+        <div>
+          <h2>Account</h2>
+          <p>The password for this admin page. Anyone who has it can see customer details and change your shop's settings, so keep it to yourself.</p>
+        </div>
+      </div>
+      <h3 class="sec-title">Change password</h3>
+      <form class="card two" id="pwForm" novalidate>
+        <label class="field full" for="pwCur">Current password<input id="pwCur" type="password" autocomplete="current-password"></label>
+        <label class="field" for="pwNew">New password <span class="hint">at least 8 characters</span><input id="pwNew" type="password" autocomplete="new-password"></label>
+        <label class="field" for="pwNew2">Type the new password again <span class="hint">passwords must match</span><input id="pwNew2" type="password" autocomplete="new-password"></label>
+        <p class="err full" id="pwErr" role="alert"></p>
+        <div class="full"><button class="btn small" id="pwBtn">Change password</button></div>
+      </form>
+      <h3 class="sec-title" style="margin-top:28px">Automatic sign-out</h3>
+      <div class="card stack">
+        <p style="margin:0">You're signed out after <b>15 minutes</b> without any clicks or typing on this page. A minute before that, a warning appears so you can stay signed in.</p>
+        <p class="hint">On a shared computer, click <b>Sign out</b> at the top before you walk away.</p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div class="savebar" id="saveBar" hidden>
+  <div class="wrap">
+    <span id="saveMsg">You have unsaved changes.</span>
+    <div style="display:flex;gap:8px">
+      <button class="btn small quiet" type="button" id="discardBtn">Discard</button>
+      <button class="btn small" type="button" id="saveBtn">Save changes</button>
+    </div>
+  </div>
+</div>
+<div class="idle-warn" id="idleWarn" role="alertdialog" aria-labelledby="idleMsg" hidden>
+  <div class="wrap">
+    <span id="idleMsg">You'll be signed out in 60 seconds because you've been inactive.</span>
+    <button class="btn small" type="button" id="stayBtn">Stay signed in</button>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script>
+(function () {
+  const U = BookingUtil, $ = id => document.getElementById(id), esc = U.esc;
+  let TOKEN = null, S = null, ORIG = '', CALS = [], BOOKINGS = [], cancelOpen = null;
+  let lastActive = Date.now(), lastPing = Date.now(); // used by start(), so declared before it can run
+
+  if (!BookingAPI.live) $('demoBar').hidden = false;
+  try { TOKEN = sessionStorage.getItem('wb-admin-token'); } catch (e) { /* storage blocked */ }
+  if (TOKEN) start(); else $('pw').focus();
+
+  /* ---------- helpers ---------- */
+  function toast(msg, bad) {
+    const t = $('toast'); t.textContent = msg; t.className = 'toast' + (bad ? ' bad' : ''); t.hidden = false;
+    clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, bad ? 6000 : 3500);
+  }
+  async function api(action, payload) {
+    try { return await BookingAPI.call(action, Object.assign({ token: TOKEN }, payload || {})); }
+    catch (e) {
+      if (e.message === 'SESSION_EXPIRED') { signOut(true); throw new Error('Your session expired. Sign in again.'); }
+      throw e;
+    }
+  }
+  const newId = name => (String(name || 'item').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 20) || 'item') + '-' + Math.random().toString(36).slice(2, 6);
+  const toHHMM = m => U.pad(Math.floor(m / 60)) + ':' + U.pad(m % 60);
+  const fromHHMM = s => { const [h, m] = String(s).split(':').map(Number); return h * 60 + (m || 0); };
+  const initials = n => String(n).trim().split(/\s+/).map(w => w[0] || '').join('').slice(0, 2).toUpperCase();
+  const isDirty = () => S && JSON.stringify(S) !== ORIG;
+
+  /* ---------- sign in / out ---------- */
+  $('loginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = $('loginBtn'); btn.disabled = true; $('loginErr').textContent = '';
+    try {
+      const r = await BookingAPI.call('adminLogin', { password: $('pw').value });
+      TOKEN = r.token;
+      try { sessionStorage.setItem('wb-admin-token', TOKEN); } catch (e2) { /* keep in memory */ }
+      $('pw').value = '';
+      await start();
+    } catch (ex) { $('loginErr').textContent = ex.message; }
+    finally { btn.disabled = false; }
+  });
+  $('signOut').onclick = () => { api('adminLogout').catch(() => {}); signOut(); };
+  function signOut(reason) {
+    TOKEN = null; S = null;
+    try { sessionStorage.removeItem('wb-admin-token'); } catch (e) { /* ignore */ }
+    $('app').hidden = true; $('saveBar').hidden = true; $('signOut').hidden = true; $('idleWarn').hidden = true; $('loginForm').hidden = false;
+    $('loginErr').textContent = reason === 'idle' ? 'You were signed out after 15 minutes without activity. Sign in again to continue.'
+      : reason ? 'Your session expired. Sign in again.' : '';
+  }
+
+  /* ---------- automatic sign-out after inactivity ---------- */
+  const IDLE_MS = 15 * 60e3, WARN_MS = 60e3, PING_MS = 4 * 60e3;
+  function onActivity() {
+    if (!TOKEN || !$('idleWarn').hidden) return; // once the warning shows, only "Stay signed in" counts
+    lastActive = Date.now();
+    // Keep the server-side session alive while the owner is working without saving.
+    if (Date.now() - lastPing > PING_MS) { lastPing = Date.now(); api('adminPing').catch(() => {}); }
+  }
+  ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(ev => window.addEventListener(ev, onActivity, { passive: true }));
+  setInterval(() => {
+    if (!TOKEN || $('app').hidden) return;
+    const idle = Date.now() - lastActive; // timestamps, so a sleeping laptop is caught on wake
+    if (idle >= IDLE_MS) {
+      api('adminLogout').catch(() => {});
+      signOut('idle');
+    } else if (idle >= IDLE_MS - WARN_MS) {
+      $('idleWarn').hidden = false;
+      const secs = Math.ceil((IDLE_MS - idle) / 1000);
+      $('idleMsg').textContent = `You'll be signed out in ${secs} second${secs === 1 ? '' : 's'} because you've been inactive.` + (isDirty() ? ' Unsaved changes will be lost.' : '');
+    }
+  }, 1000);
+  $('stayBtn').onclick = () => {
+    lastActive = lastPing = Date.now();
+    $('idleWarn').hidden = true;
+    api('adminPing').catch(() => {});
+  };
+
+  async function start() {
+    $('loginForm').hidden = true;
+    lastActive = lastPing = Date.now();
+    let r;
+    try { r = await api('adminGetAll'); }
+    catch (e) { if (TOKEN) { $('loginForm').hidden = false; $('loginErr').textContent = e.message; } return; }
+    S = r.settings; ORIG = JSON.stringify(S); CALS = r.calendars;
+    $('tzNote').textContent = 'Regular weekly hours, in the shop\'s time zone (' + r.timezone + '). For holidays or vacations, use Days off.';
+    $('app').hidden = false; $('signOut').hidden = false;
+    const today = U.ymd(new Date());
+    $('bFrom').value = today; $('bTo').value = U.addDays(today, 14);
+    $('offStart').value = today; $('offEnd').value = today;
+    renderAll();
+    loadBookings();
+  }
+
+  /* ---------- tabs ---------- */
+  $('tabs').onclick = e => {
+    const t = e.target.closest('.tab'); if (!t) return;
+    document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', x === t));
+    document.querySelectorAll('[data-pane]').forEach(p => p.hidden = p.dataset.pane !== t.dataset.tab);
+    if (t.dataset.tab === 'bookings') loadBookings();
+  };
+
+  /* ---------- save bar ---------- */
+  function markDirty() {
+    $('saveBar').hidden = !isDirty();
+    $('saveMsg').className = ''; $('saveMsg').textContent = 'You have unsaved changes.';
+  }
+  window.addEventListener('beforeunload', e => { if (isDirty()) { e.preventDefault(); e.returnValue = ''; } });
+  $('discardBtn').onclick = () => { S = JSON.parse(ORIG); renderAll(); markDirty(); toast('Changes discarded.'); };
+  $('saveBtn').onclick = async () => {
+    const btn = $('saveBtn'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Saving…';
+    try {
+      const r = await api('adminSave', { settings: S });
+      S = r.settings; ORIG = JSON.stringify(S);
+      renderAll(); markDirty();
+      toast('Saved. The website now shows these changes.');
+    } catch (e) {
+      $('saveMsg').className = 'err'; $('saveMsg').textContent = e.message;
+    } finally { btn.disabled = false; btn.textContent = 'Save changes'; }
+  };
+
+  function renderAll() {
+    $('shopName').innerHTML = esc(S.shop.name) + '<small>Admin</small>';
+    renderBarberFilter(); renderServices(); renderBarbers(); renderHours(); renderClosures(); renderShop();
+  }
+
+  /* ---------- bookings ---------- */
+  function renderBarberFilter() {
+    const cur = $('bBarber').value;
+    $('bBarber').innerHTML = '<option value="">All barbers</option>' + S.barbers.map(b => `<option value="${esc(b.id)}">${esc(b.name)}</option>`).join('');
+    $('bBarber').value = cur;
+    const who = $('offWho').value;
+    $('offWho').innerHTML = '<option value="">Whole shop (closed)</option>' + S.barbers.map(b => `<option value="${esc(b.id)}">${esc(b.name)}</option>`).join('');
+    $('offWho').value = who;
+  }
+  ['bFrom', 'bTo'].forEach(id => $(id).addEventListener('change', loadBookings));
+  $('bBarber').addEventListener('change', renderBookings);
+  $('bRefresh').onclick = loadBookings;
+
+  async function loadBookings() {
+    const from = $('bFrom').value, to = $('bTo').value;
+    if (!from || !to || to < from) { $('bList').innerHTML = '<p class="err">Pick a "To" date on or after the "From" date.</p>'; return; }
+    $('bList').innerHTML = '<p class="hint"><span class="spinner"></span> Loading bookings…</p>';
+    try {
+      const r = await api('adminBookings', { from, to });
+      BOOKINGS = r.bookings; cancelOpen = null; renderBookings();
+    } catch (e) { $('bList').innerHTML = `<p class="err">${esc(e.message)}</p>`; }
+  }
+
+  function renderBookings() {
+    const f = $('bBarber').value;
+    const list = BOOKINGS.filter(b => !f || b.barberId === f);
+    const total = list.reduce((a, b) => a + (Number(b.price) || 0), 0);
+    const today = U.ymd(new Date());
+    $('bStats').innerHTML = `<span><b>${list.length}</b> booking${list.length === 1 ? '' : 's'}</span><span><b>$${total.toLocaleString()}</b> booked</span><span><b>${list.filter(b => b.date === today).length}</b> today</span>`;
+    if (!list.length) { $('bList').innerHTML = '<div class="empty">No bookings in this range yet. New online bookings show up here as soon as they\'re made.</div>'; return; }
+    const groups = {};
+    list.forEach(b => (groups[b.date] = groups[b.date] || []).push(b));
+    $('bList').innerHTML = Object.keys(groups).map(date => {
+      const items = groups[date];
+      return `<div class="dayhead"><h3>${date === today ? 'Today · ' : ''}${U.fmtDate(date, { weekday: 'long', month: 'short', day: 'numeric' })}</h3><span>${items.length} booked</span></div>` +
+        items.map(b => `<div class="bk" data-id="${esc(b.id)}">
+          <div class="when">${U.fmtTime(b.time)}<small>to ${U.fmtTime(b.time + b.dur)}</small></div>
+          <div class="who">
+            <b>${esc(b.name)}</b> <span class="pill">${esc(b.barberName)}</span>
+            <div class="meta"><span>${esc(b.service)}${b.price ? ' · $' + esc(b.price) : ''}</span><span>${esc(b.phone)}</span>${b.email ? `<span>${esc(b.email)}</span>` : ''}<span>${esc(b.code)}</span></div>
+            ${b.notes ? `<div class="notes">${esc(b.notes)}</div>` : ''}
+          </div>
+          <div class="acts">${cancelOpen === b.id ? '' : '<button class="btn small quiet" type="button" data-act="ask">Cancel</button>'}</div>
+          ${cancelOpen === b.id ? `<div class="cancel-box">
+            <b>Cancel ${esc(b.name)}'s ${esc(b.service)} at ${U.fmtTime(b.time)}?</b>
+            <span class="hint">This removes it from your Google Calendar and frees up the time on the website.</span>
+            <label class="check"><input type="checkbox" id="cNotify" ${b.email ? 'checked' : 'disabled'}> ${b.email ? 'Email ' + esc(b.email) + ' that it\'s cancelled' : 'No email on file. Call ' + esc(b.phone) + ' to let them know.'}</label>
+            ${b.email ? '<label class="field" for="cReason">Message to include <span class="hint">(optional)</span><input id="cReason" placeholder="Sorry, Marco is out sick. Call us to rebook."></label>' : ''}
+            <div class="row"><button class="btn small" type="button" data-act="confirm">Cancel booking</button><button class="btn small quiet" type="button" data-act="keep">Keep it</button></div>
+          </div>` : ''}
+        </div>`).join('');
+    }).join('');
+  }
+
+  $('bList').addEventListener('click', async e => {
+    const btn = e.target.closest('button[data-act]'); if (!btn) return;
+    const id = btn.closest('.bk').dataset.id, b = BOOKINGS.find(x => x.id === id);
+    if (btn.dataset.act === 'ask') { cancelOpen = id; renderBookings(); return; }
+    if (btn.dataset.act === 'keep') { cancelOpen = null; renderBookings(); return; }
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Cancelling…';
+    try {
+      const notify = $('cNotify') && $('cNotify').checked;
+      const r = await api('adminCancel', { calendarId: b.calendarId, eventId: b.id, notify, reason: $('cReason') ? $('cReason').value.trim() : '' });
+      BOOKINGS = BOOKINGS.filter(x => x.id !== id); cancelOpen = null; renderBookings();
+      toast('Booking cancelled' + (r.emailed ? ' and the customer was emailed.' : '.'));
+    } catch (ex) { toast(ex.message, true); btn.disabled = false; btn.textContent = 'Cancel booking'; }
+  });
+
+  /* ---------- services ---------- */
+  const durOpts = sel => { let o = ''; for (let m = 10; m <= 180; m += 5) o += `<option value="${m}"${m === sel ? ' selected' : ''}>${m} min</option>`; if (sel % 5 || sel > 180) o += `<option value="${sel}" selected>${sel} min</option>`; return o; };
+  function renderServices() {
+    $('svcList').innerHTML = S.services.map((s, i) => `<div class="svc-row${s.active === false ? ' off' : ''}" data-i="${i}">
+      <input data-f="name" value="${esc(s.name)}" aria-label="Service name" placeholder="Service name">
+      <div class="money"><input data-f="price" type="number" min="0" step="1" value="${esc(s.price)}" aria-label="Price in dollars"></div>
+      <select data-f="dur" aria-label="Length">${durOpts(Number(s.dur))}</select>
+      <input class="desc" data-f="desc" value="${esc(s.desc)}" aria-label="Description" placeholder="Short description">
+      <label class="check"><input type="checkbox" data-f="active" ${s.active !== false ? 'checked' : ''}> <span>On site</span></label>
+      <button class="btn small quiet" type="button" data-act="del">Remove</button>
+    </div>`).join('') || '<div class="empty">No services yet. Add one so customers can book.</div>';
+  }
+  $('svcList').addEventListener('input', e => {
+    const row = e.target.closest('[data-i]'), f = e.target.dataset.f; if (!row || !f) return;
+    const s = S.services[row.dataset.i];
+    s[f] = f === 'active' ? e.target.checked : (f === 'price' || f === 'dur') ? Number(e.target.value) : e.target.value;
+    if (f === 'active') row.classList.toggle('off', !e.target.checked);
+    markDirty();
+  });
+  $('svcList').addEventListener('click', e => {
+    if (!e.target.closest('[data-act="del"]')) return;
+    S.services.splice(e.target.closest('[data-i]').dataset.i, 1); renderServices(); markDirty();
+  });
+  $('addSvc').onclick = () => {
+    S.services.push({ id: newId('service'), name: '', price: 30, dur: 30, desc: '', active: true });
+    renderServices(); markDirty();
+    $('svcList').lastElementChild.querySelector('input').focus();
+  };
+
+  /* ---------- barbers ---------- */
+  function calOptions(sel) {
+    const opts = CALS.slice();
+    if (sel && !opts.some(c => c.id === sel)) opts.push({ id: sel, name: sel + ' (not found)' });
+    return opts.map(c => `<option value="${esc(c.id)}"${c.id === sel ? ' selected' : ''}>${esc(c.name)}</option>`).join('');
+  }
+  function renderBarbers() {
+    $('barberGrid').innerHTML = S.barbers.map((b, i) => `<div class="card barber-card" data-i="${i}">
+      <div class="row2">
+        <label class="field">Name<input data-f="name" value="${esc(b.name)}" placeholder="Barber's name"></label>
+        <label class="field">Initials<input data-f="init" value="${esc(b.init)}" maxlength="3"></label>
+      </div>
+      <label class="field">Short bio<textarea data-f="bio" rows="2">${esc(b.bio)}</textarea></label>
+      <label class="field">Google Calendar for bookings<select data-f="calendarId">${calOptions(b.calendarId)}</select></label>
+      <div class="field">Regular days off
+        <div class="daysoff">${[0, 1, 2, 3, 4, 5, 6].map(d => `<label><input type="checkbox" data-f="daysOff" data-d="${d}" ${(b.daysOff || []).includes(d) ? 'checked' : ''}>${U.DAYNAMES[d].slice(0, 3)}</label>`).join('')}</div>
+      </div>
+      <div class="card-foot">
+        <label class="check"><input type="checkbox" data-f="active" ${b.active !== false ? 'checked' : ''}> Taking bookings</label>
+        <button class="btn small quiet" type="button" data-act="del">Remove</button>
+      </div>
+    </div>`).join('') || '<div class="empty">No barbers yet. Add one so customers can book.</div>';
+  }
+  $('barberGrid').addEventListener('input', e => {
+    const card = e.target.closest('[data-i]'), f = e.target.dataset.f; if (!card || !f) return;
+    const b = S.barbers[card.dataset.i];
+    if (f === 'daysOff') {
+      const d = Number(e.target.dataset.d), set = new Set(b.daysOff || []);
+      e.target.checked ? set.add(d) : set.delete(d);
+      b.daysOff = [...set].sort();
+    } else if (f === 'active') b.active = e.target.checked;
+    else if (f === 'name') {
+      const autoInit = !b.init || b.init === initials(b.name);
+      b.name = e.target.value;
+      if (autoInit) { b.init = initials(b.name); card.querySelector('[data-f="init"]').value = b.init; }
+    } else b[f] = e.target.value;
+    markDirty();
+  });
+  $('barberGrid').addEventListener('click', e => {
+    if (!e.target.closest('[data-act="del"]')) return;
+    S.barbers.splice(e.target.closest('[data-i]').dataset.i, 1); renderBarbers(); renderBarberFilter(); markDirty();
+  });
+  $('addBarber').onclick = () => {
+    S.barbers.push({ id: newId('barber'), name: '', init: '', bio: '', calendarId: (CALS[0] || { id: 'primary' }).id, daysOff: [], active: true });
+    renderBarbers(); markDirty();
+    $('barberGrid').lastElementChild.querySelector('input').focus();
+  };
+
+  /* ---------- hours ---------- */
+  function renderHours() {
+    $('hrsGrid').innerHTML = '<span class="hrs-head">Day</span><span class="hrs-head">Open?</span><span class="hrs-head">Opens</span><span class="hrs-head">Closes</span>' +
+      [1, 2, 3, 4, 5, 6, 0].map(d => {
+        const h = S.hours[d];
+        return `<span class="dn">${U.DAYNAMES[d]}</span>
+          <label class="check"><input type="checkbox" data-d="${d}" data-f="open" ${h ? 'checked' : ''}> Open</label>
+          ${h ? `<input type="time" data-d="${d}" data-f="from" value="${toHHMM(h[0])}" aria-label="${U.DAYNAMES[d]} opens" step="900">
+                 <input type="time" data-d="${d}" data-f="to" value="${toHHMM(h[1])}" aria-label="${U.DAYNAMES[d]} closes" step="900">`
+               : '<span class="closed">Closed all day</span>'}`;
+      }).join('');
+    $('slotStep').value = S.slotStep; $('windowDays').value = S.windowDays; $('minNotice').value = S.minNotice;
+    ensureOption('windowDays', S.windowDays, v => v + ' days ahead');
+    ensureOption('minNotice', S.minNotice, v => v + ' minutes');
+    ensureOption('slotStep', S.slotStep, v => v + ' minutes');
+  }
+  function ensureOption(id, val, label) {
+    const sel = $(id);
+    if (![...sel.options].some(o => Number(o.value) === Number(val))) { sel.add(new Option(label(val), val)); }
+    sel.value = val;
+  }
+  $('hrsGrid').addEventListener('change', e => {
+    const d = e.target.dataset.d, f = e.target.dataset.f; if (d == null) return;
+    if (f === 'open') { S.hours[d] = e.target.checked ? [540, 1080] : null; renderHours(); }
+    else if (e.target.value) { const h = S.hours[d]; h[f === 'from' ? 0 : 1] = fromHHMM(e.target.value); }
+    markDirty();
+  });
+  ['slotStep', 'windowDays', 'minNotice'].forEach(id => $(id).addEventListener('change', e => { S[id] = Number(e.target.value); markDirty(); }));
+
+  /* ---------- days off ---------- */
+  function renderClosures() {
+    const today = U.ymd(new Date());
+    const names = Object.fromEntries(S.barbers.map(b => [b.id, b.name]));
+    const list = S.closures.slice().sort((a, b) => a.start.localeCompare(b.start));
+    $('offList').innerHTML = list.map(c => `<div class="off-row${c.end < today ? ' past' : ''}" data-id="${esc(c.id)}">
+      <span class="dates">${U.fmtDate(c.start, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}${c.end !== c.start ? ' – ' + U.fmtDate(c.end, { weekday: 'short', month: 'short', day: 'numeric' }) : ''}</span>
+      <span>${c.barberId ? esc(names[c.barberId] || 'Former barber') + ' off' : '<b>Shop closed</b>'}</span>
+      <span class="hint">${esc(c.note || '')}${c.end < today ? ' (past)' : ''}</span>
+      <button class="btn small quiet" type="button">Remove</button>
+    </div>`).join('') || '<div class="empty" style="margin-top:16px">No days off scheduled.</div>';
+  }
+  $('offStart').addEventListener('change', () => { if (!$('offEnd').value || $('offEnd').value < $('offStart').value) $('offEnd').value = $('offStart').value; });
+  $('addOff').onclick = () => {
+    const start = $('offStart').value, end = $('offEnd').value || start;
+    $('offErr').textContent = '';
+    if (!start) { $('offErr').textContent = 'Pick the first day off.'; return; }
+    if (end < start) { $('offErr').textContent = 'The last day must be on or after the first day.'; return; }
+    S.closures.push({ id: newId('off'), start, end, barberId: $('offWho').value, note: $('offNote').value.trim() });
+    $('offNote').value = '';
+    renderClosures(); markDirty();
+    toast('Added. Save changes to apply it to the website.');
+  };
+  $('offList').addEventListener('click', e => {
+    if (!e.target.closest('button')) return;
+    const id = e.target.closest('[data-id]').dataset.id;
+    S.closures = S.closures.filter(c => c.id !== id); renderClosures(); markDirty();
+  });
+
+  /* ---------- shop info ---------- */
+  function renderShop() {
+    document.querySelectorAll('[data-shop]').forEach(el => el.value = S.shop[el.dataset.shop] || '');
+    $('shNotify').checked = !!S.shop.notifyOwner;
+  }
+  document.querySelector('[data-pane="shop"]').addEventListener('input', e => {
+    const k = e.target.dataset.shop;
+    if (k) { S.shop[k] = e.target.value; if (k === 'name') $('shopName').innerHTML = esc(S.shop.name) + '<small>Admin</small>'; markDirty(); }
+    if (e.target.id === 'shNotify') { S.shop.notifyOwner = e.target.checked; markDirty(); }
+  });
+  $('pwForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const cur = $('pwCur').value, a = $('pwNew').value, b = $('pwNew2').value;
+    $('pwErr').textContent = '';
+    if (!cur) { $('pwErr').textContent = 'Enter your current password.'; $('pwCur').focus(); return; }
+    if (a.length < 8) { $('pwErr').textContent = 'Use at least 8 characters for the new password.'; $('pwNew').focus(); return; }
+    if (a !== b) { $('pwErr').textContent = 'The two new passwords don\'t match.'; $('pwNew2').focus(); return; }
+    if (a === cur) { $('pwErr').textContent = 'The new password is the same as your current one.'; $('pwNew').focus(); return; }
+    $('pwBtn').disabled = true;
+    try {
+      await api('adminChangePassword', { currentPassword: cur, newPassword: a });
+      $('pwCur').value = $('pwNew').value = $('pwNew2').value = '';
+      toast('Password changed. Use the new one next time you sign in.');
+    }
+    catch (ex) { $('pwErr').textContent = ex.message; }
+    finally { $('pwBtn').disabled = false; }
+  });
+})();
+</script>
+</body>
+</html>
